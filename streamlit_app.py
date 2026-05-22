@@ -6,6 +6,7 @@ streamlit run streamlit_app.py
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import json, datetime, os, io, tempfile
 from copy import deepcopy
 from collections import defaultdict
@@ -217,6 +218,8 @@ def init_state():
         for r in st.session_state.store["rigs"]:
             r.setdefault("note", "")
             r.setdefault("status", "active")
+    if "user_tz" not in st.session_state:
+        st.session_state.user_tz = None
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HELPERS
@@ -226,7 +229,44 @@ def blank_entry():
     d.update({"idleReason":"","downReason":"","project":"","swVersion":"","notes":""})
     return d
 
-def today_str():   return datetime.date.today().isoformat()
+
+def get_browser_timezone():
+    if st.session_state.get("user_tz"):
+        return st.session_state.user_tz
+    tz = "UTC"
+    try:
+        tz_val = components.html(
+            """
+            <script src="https://cdn.jsdelivr.net/npm/streamlit-component-lib@0.0.0/dist/streamlit-component-lib.min.js"></script>
+            <script>
+              const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+              Streamlit.setComponentValue(tz);
+            </script>
+            """,
+            height=0,
+        )
+        if isinstance(tz_val, str) and tz_val:
+            tz = tz_val
+    except Exception:
+        pass
+    st.session_state.user_tz = tz
+    return tz
+
+
+def get_user_now():
+    tz_name = get_browser_timezone()
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(tz_name)
+    except Exception:
+        tz = datetime.timezone.utc
+    return datetime.datetime.now(tz)
+
+
+def today_date():
+    return get_user_now().date()
+
+def today_str():   return today_date().isoformat()
 def fmt_date(s):
     try:    return datetime.date.fromisoformat(s).strftime("%d %b %Y")
     except: return s
@@ -598,7 +638,8 @@ def render_sidebar(store):
                 f'<span style="color:#e6edf3;">{cat["label"]}</span>',
                 unsafe_allow_html=True)
         st.markdown("---")
-        st.caption(f"Today: {fmt_date(today_str())}")
+        tz = get_browser_timezone()
+        st.caption(f"Today: {fmt_date(today_str())}  ·  Timezone: {tz}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — DASHBOARD
@@ -797,8 +838,8 @@ def render_daily_log(store):
     st.markdown("### ✏ Daily Log Entry")
     col1, col2, col3 = st.columns([2,1,3])
     with col1:
-        sel_date = st.date_input("Log Date", value=datetime.date.today(),
-                                 max_value=datetime.date.today(), key="log_date")
+        sel_date = st.date_input("Log Date", value=today_date(),
+                                 max_value=today_date(), key="log_date")
     date_str = sel_date.isoformat()
     existing = store["logs"].get(date_str,{})
     with col2:
@@ -926,11 +967,11 @@ def render_report(store):
     c1,c2,c3,c4,c5 = st.columns([2,2,2,2,2])
     with c1:
         from_date = st.date_input("From",
-            value=datetime.date.today()-datetime.timedelta(days=6),
-            max_value=datetime.date.today(), key="rep_from")
+            value=today_date()-datetime.timedelta(days=6),
+            max_value=today_date(), key="rep_from")
     with c2:
-        to_date = st.date_input("To", value=datetime.date.today(),
-            max_value=datetime.date.today(), key="rep_to")
+        to_date = st.date_input("To", value=today_date(),
+            max_value=today_date(), key="rep_to")
     with c3:
         st.markdown("<br>",unsafe_allow_html=True)
         gen = st.button("Generate Report", type="primary")
@@ -1176,6 +1217,7 @@ def main():
     render_sidebar(store)
 
     # App header
+    now = get_user_now()
     st.markdown(f"""
     <div style="display:flex;justify-content:space-between;align-items:center;
                 border-bottom:1px solid #30363d;padding-bottom:12px;margin-bottom:0;">
@@ -1184,7 +1226,7 @@ def main():
         <div style="color:#e6edf3;font-size:20pt;font-weight:800;margin-top:2px;">RIG STATUS & USAGE BOARD</div>
       </div>
       <div style="text-align:right;color:#8b949e;font-size:9pt;">
-        {datetime.date.today().strftime("%a, %d %b %Y")}<br>
+        {now.strftime("%a, %d %b %Y %H:%M %Z")}<br>
         {len(store['rigs'])} rigs · {len(store['logs'])} days logged
       </div>
     </div>""", unsafe_allow_html=True)
