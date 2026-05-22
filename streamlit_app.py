@@ -1147,13 +1147,13 @@ def render_settings(store):
         for cat in CATS:
             st.markdown(
                 f'<span style="color:{cat["hex"]};font-weight:700;font-size:11pt;">● {cat["label"]}</span>'
-                + (" — &lt;= 18h" if cat["key"] in ["autoExec","manExec","autoDev"] else " — free &lt;= 24h, reason required"),
+                + (" — &lt;= 18h" if cat["key"] in ["manExec","autoDev"] else " — free &lt;= 24h, reason required"),
                 unsafe_allow_html=True)
         st.markdown(f"""
         <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-top:12px;">
-          <div style="color:#388bfd;font-weight:700;">AE + ME share {HUMAN_POOL}h human pool</div>
+          <div style="color:#388bfd;font-weight:700;">AD + ME share {HUMAN_POOL}h human pool</div>
           <div style="color:#8b949e;font-size:9pt;margin-top:4px;">
-            Auto Exec + Manual Exec combined ≤ {HUMAN_POOL}h per rig per day
+            Auto Dev + Manual Exec combined ≤ {HUMAN_POOL}h per rig per day
           </div>
         </div>""", unsafe_allow_html=True)
 
