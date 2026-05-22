@@ -1166,21 +1166,6 @@ def render_settings(store):
           </div>
         </div>""", unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.markdown("#### Database Status")
-        sb = get_supabase()
-        if sb:
-            st.success("☁ Supabase connected — data persists across all users and sessions")
-            st.markdown("Data is stored in your Supabase `hil_tracker` table and shared with all users who open this app.")
-        else:
-            st.warning("⚠ No Supabase configured — data lives in this browser session only")
-            st.markdown("""
-            To enable persistent shared database:
-            1. Create a free account at **supabase.com**
-            2. Create a table `hil_tracker` (see Setup Guide)
-            3. Add `SUPABASE_URL` and `SUPABASE_KEY` to Streamlit secrets
-            """)
-
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
