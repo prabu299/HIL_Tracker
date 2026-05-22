@@ -800,7 +800,7 @@ def render_daily_log(store):
             st.success("✓ Saved")
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.info(f"Rules: AE+ME ≤{HUMAN_POOL}h  ·  AD ≤{AUTDEV_MAX}h  ·  Total ≤{DAY_HOURS}h  ·  Idle/Down reason required")
+        st.info(f"Rules: AE ≤{DAY_HOURS}h  ·  ME ≤{HUMAN_POOL}h  ·  AD+ME ≤{HUMAN_POOL}h  ·  Total ≤{DAY_HOURS}h  ·  Idle/Down reason required")
 
     # Global handover note for the day
     existing_meta = existing.get("_meta", {})
@@ -820,7 +820,7 @@ def render_daily_log(store):
         e   = existing.get(rid, blank_entry())
         with st.expander(f"**{rig['name']}**  {'✓' if rid in existing else '○'}", expanded=False):
             c1,c2,c3,c4,c5 = st.columns(5)
-            ae = c1.number_input("Auto Exec (h)", 0.0, float(HUMAN_POOL), float(e.get("autoExec",0)), 0.5, key=f"ae_{rid}")
+            ae = c1.number_input("Auto Exec (h)", 0.0, float(DAY_HOURS), float(e.get("autoExec",0)), 0.5, key=f"ae_{rid}")
             me = c2.number_input("Manual Exec (h)",0.0, float(HUMAN_POOL), float(e.get("manExec", 0)), 0.5, key=f"me_{rid}")
             ad = c3.number_input("Auto Dev (h)",  0.0, float(AUTDEV_MAX),  float(e.get("autoDev", 0)), 0.5, key=f"ad_{rid}")
             ih = c4.number_input("Idle (h)",      0.0, float(DAY_HOURS),   float(e.get("idle",    0)), 0.5, key=f"idle_{rid}")
@@ -883,8 +883,9 @@ def render_daily_log(store):
 
             # Validation
             warns = []
-            if ae+me > HUMAN_POOL: warns.append(f"AE+ME = {ae+me:.1f}h > {HUMAN_POOL}h pool")
-            if ad > AUTDEV_MAX:     warns.append(f"AD = {ad:.1f}h > {AUTDEV_MAX}h max")
+            if me > HUMAN_POOL:      warns.append(f"ME = {me:.1f}h > {HUMAN_POOL}h max")
+            if ad + me > HUMAN_POOL: warns.append(f"AD+ME = {ad+me:.1f}h > {HUMAN_POOL}h pool")
+            if ad > AUTDEV_MAX:      warns.append(f"AD = {ad:.1f}h > {AUTDEV_MAX}h max")
             total = ae+me+ad+ih+dh
             if total > DAY_HOURS:  warns.append(f"Total {total:.1f}h > {DAY_HOURS}h")
             if warns:
@@ -1145,9 +1146,10 @@ def render_settings(store):
     with c2:
         st.markdown("#### Hour Rules — 24h Day")
         for cat in CATS:
+            label = " — <= 24h" if cat["key"] == "autoExec" else " — <= 18h" if cat["key"] in ["manExec","autoDev"] else " — <= 24h, reason required"
             st.markdown(
                 f'<span style="color:{cat["hex"]};font-weight:700;font-size:11pt;">● {cat["label"]}</span>'
-                + (" — &lt;= 18h" if cat["key"] in ["manExec","autoDev"] else " — &lt;= 24h, reason required"),
+                + label,
                 unsafe_allow_html=True)
         st.markdown(f"""
         <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-top:12px;">
