@@ -223,7 +223,7 @@ def init_state():
 # ══════════════════════════════════════════════════════════════════════════════
 def blank_entry():
     d = {k:0.0 for k in CAT_KEYS}
-    d.update({"idleReason":"","downReason":"","project":"","notes":""})
+    d.update({"idleReason":"","downReason":"","project":"","swVersion":"","notes":""})
     return d
 
 def today_str():   return datetime.date.today().isoformat()
@@ -683,7 +683,9 @@ def render_dashboard(store):
                     v=float(e.get(cat["key"],0) or 0)
                     if v>0:
                         hours_html+=f'<div style="color:{cat["hex"]};font-size:9pt;font-weight:700;">{cat["short"]} {v:.1f}h</div>'
-                note_html = f'<div style="color:#8b949e;font-size:8pt;margin-top:4px;">• {note}</div>' if note else ""
+                note_html = f'<div style="color:#8b949e;font-size:8pt;">• {note}</div>' if note else ""
+                sw_version = e.get("swVersion", e.get("project", ""))
+                sw_html = f'<div style="color:#8b949e;font-size:8pt;text-align:right;">SW: {sw_version}</div>' if sw_version else ""
                 st.markdown(f"""
                 <div style="background:#161b22;border:1px solid #30363d;
                     border-left:3px solid {s_col};border-radius:8px;
@@ -694,7 +696,10 @@ def render_dashboard(store):
                           border-radius:4px;padding:1px 7px;font-size:8pt;font-weight:700;">{s_lbl}</span>
                   </div>
                   {hours_html if hours_html else '<div style="color:#484f58;font-size:9pt;margin-top:4px;">No entry today</div>'}
-                  {note_html}
+                  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;">
+                    {note_html}
+                    {sw_html}
+                  </div>
                 </div>""", unsafe_allow_html=True)
 
     # 7-day history
@@ -826,7 +831,7 @@ def render_daily_log(store):
             dh = c5.number_input("Down (h)",      0.0, float(DAY_HOURS),   float(e.get("down",    0)), 0.5, key=f"down_{rid}")
 
             c6,c7 = st.columns(2)
-            proj  = c6.text_input("Project", e.get("project",""), key=f"proj_{rid}")
+            sw_version = c6.text_input("SW Version", e.get("swVersion", e.get("project", "")), key=f"sw_{rid}")
             notes = c7.text_input("Notes",   e.get("notes",""),   key=f"notes_{rid}")
 
             # Engineer handover fields per rig
@@ -896,7 +901,7 @@ def render_daily_log(store):
                 "autoExec":ae,"manExec":me,"autoDev":ad,
                 "idle":ih,"idleReason":idle_reason,
                 "down":dh,"downReason":down_reason,
-                "project":proj,"notes":notes,
+                "swVersion":sw_version,"notes":notes,
                 "offshore":offshore,"onsite":onsite,
             }
 
