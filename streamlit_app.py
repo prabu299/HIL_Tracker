@@ -1147,7 +1147,7 @@ def render_settings(store):
         for cat in CATS:
             st.markdown(
                 f'<span style="color:{cat["hex"]};font-weight:700;font-size:11pt;">● {cat["label"]}</span>'
-                + (" — &lt;= 18h" if cat["key"] in ["manExec","autoDev"] else " — free &lt;= 24h, reason required"),
+                + (" — &lt;= 18h" if cat["key"] in ["manExec","autoDev"] else " — &lt;= 24h, reason required"),
                 unsafe_allow_html=True)
         st.markdown(f"""
         <div style="background:#161b22;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-top:12px;">
