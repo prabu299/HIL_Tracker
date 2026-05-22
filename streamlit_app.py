@@ -418,7 +418,7 @@ def build_pptx(store, stats, cdata, dates, from_d, to_d, fig1, fig2):
     txt(sl1,"CONTINUOUS DELIVERY FOR QUALITY AND COMPLIANCE",0.4,0.1,12,0.3,
         size=9,color=RGBColor(255,255,255),bold=True)
     rect(sl1,0.3,0.7,12.7,6.5,BG2_R,rgb("#30363d"))
-    txt(sl1,"HIL — TEST ENVIRONMENTS",0.6,1.1,12,0.9,size=24,bold=True,color=FG_R)
+    txt(sl1,"CDQC ADAS REGRESSION TESTING",0.6,1.1,12,0.9,size=24,bold=True,color=FG_R)
     txt(sl1,f"Report Period:  {fmt_date(from_d)}  →  {fmt_date(to_d)}",
         0.6,2.1,12,0.5,size=13,color=ACC_R)
     txt(sl1,f"Generated: {fmt_date(today_str())}   |   {len(rigs)} Rigs",
@@ -657,7 +657,6 @@ def render_dashboard(store):
     st.markdown("---")
 
     # Weekly chart
-    st.markdown("#### Rig Utilisation — GUT Dashboard Style")
     fig = weekly_util_chart(store)
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
@@ -1188,7 +1187,7 @@ def main():
     <div style="display:flex;justify-content:space-between;align-items:center;
                 border-bottom:1px solid #30363d;padding-bottom:12px;margin-bottom:0;">
       <div>
-        <div style="color:#8b949e;font-size:9pt;font-weight:700;letter-spacing:2px;">HIL / VIL LAB  ·  EXECUTION TRACKER</div>
+        <div style="color:#8b949e;font-size:9pt;font-weight:700;letter-spacing:2px;">HIL RIG  ·  UTILISATION TRACKER</div>
         <div style="color:#e6edf3;font-size:20pt;font-weight:800;margin-top:2px;">RIG STATUS & USAGE BOARD</div>
       </div>
       <div style="text-align:right;color:#8b949e;font-size:9pt;">
