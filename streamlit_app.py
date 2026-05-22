@@ -718,6 +718,71 @@ def render_dashboard(store):
     df = pd.DataFrame(rows_data).set_index("RIG")
     st.dataframe(df, use_container_width=True)
 
+    # ── Engineer Handover Board ───────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown("#### 🔄 Engineer Handover — Today")
+
+    # Collect per-rig engineer assignments
+    rig_engineers = []
+    for rig in rigs:
+        e        = t_log.get(rig["id"], {})
+        offshore = e.get("offshore","").strip()
+        onsite   = e.get("onsite","").strip()
+        if offshore or onsite:
+            rig_engineers.append((rig, offshore, onsite))
+
+    # Global handover note
+    global_note = t_log.get("_meta",{}).get("handover","").strip()
+
+    if rig_engineers:
+        # Column headers
+        st.markdown(
+            '<div style="display:grid;grid-template-columns:120px 1fr 40px 1fr;'
+            'gap:8px;padding:6px 12px;background:#161b22;border-radius:6px;margin-bottom:8px;">'
+            '<span style="color:#484f58;font-size:8pt;font-weight:700;letter-spacing:1px;">RIG</span>'
+            '<span style="color:#388bfd;font-size:8pt;font-weight:700;letter-spacing:1px;">🌐 OFFSHORE ENGINEER</span>'
+            '<span></span>'
+            '<span style="color:#3fb950;font-size:8pt;font-weight:700;letter-spacing:1px;">🏢 ONSITE ENGINEER</span>'
+            '</div>', unsafe_allow_html=True)
+
+        for rig, offshore, onsite in rig_engineers:
+            off_html = (
+                f'<div style="background:rgba(56,139,253,0.10);border:1px solid rgba(56,139,253,0.3);'
+                f'border-radius:6px;padding:10px 14px;">'
+                f'<div style="color:#388bfd;font-size:7.5pt;font-weight:700;letter-spacing:1.5px;">🌐 OFFSHORE</div>'
+                f'<div style="color:#e6edf3;font-size:14pt;font-weight:800;">'
+                f'{offshore if offshore else "<span style='color:#484f58'>—</span>"}</div>'
+                f'</div>')
+            on_html = (
+                f'<div style="background:rgba(63,185,80,0.10);border:1px solid rgba(63,185,80,0.3);'
+                f'border-radius:6px;padding:10px 14px;">'
+                f'<div style="color:#3fb950;font-size:7.5pt;font-weight:700;letter-spacing:1.5px;">🏢 ONSITE</div>'
+                f'<div style="color:#e6edf3;font-size:14pt;font-weight:800;">'
+                f'{onsite if onsite else "<span style='color:#484f58'>—</span>"}</div>'
+                f'</div>')
+            st.markdown(
+                f'<div style="display:grid;grid-template-columns:120px 1fr 40px 1fr;'
+                f'gap:8px;align-items:center;margin-bottom:8px;'
+                f'background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 12px;">'
+                f'<span style="color:#e6edf3;font-size:12pt;font-weight:800;">{rig["name"]}</span>'
+                f'{off_html}'
+                f'<div style="text-align:center;color:#484f58;font-size:18pt;font-weight:300;">→</div>'
+                f'{on_html}'
+                f'</div>', unsafe_allow_html=True)
+
+        if global_note:
+            st.markdown(
+                f'<div style="background:rgba(210,153,34,0.08);border:1px solid rgba(210,153,34,0.3);'
+                f'border-radius:6px;padding:10px 16px;margin-top:8px;">'
+                f'<span style="color:#d29922;font-weight:700;">📋 Handover Note: </span>'
+                f'<span style="color:#e6edf3;">{global_note}</span>'
+                f'</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(
+            '<div style="color:#484f58;font-size:10pt;font-style:italic;padding:8px 0;">'
+            'No engineer assignments for today. Add Offshore / Onsite names per rig in the Daily Log tab.'
+            '</div>', unsafe_allow_html=True)
+
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — DAILY LOG
 # ══════════════════════════════════════════════════════════════════════════════
@@ -737,6 +802,15 @@ def render_daily_log(store):
         st.markdown("<br>", unsafe_allow_html=True)
         st.info(f"Rules: AE+ME ≤{HUMAN_POOL}h  ·  AD ≤{AUTDEV_MAX}h  ·  Total ≤{DAY_HOURS}h  ·  Idle/Down reason required")
 
+    # Global handover note for the day
+    existing_meta = existing.get("_meta", {})
+    st.markdown("---")
+    hov_col1, hov_col2 = st.columns([3,3])
+    global_handover = hov_col1.text_input(
+        "📋 Day Handover Note (optional)",
+        existing_meta.get("handover",""),
+        placeholder="Brief note about today's overall handover…",
+        key="global_handover")
     st.markdown("---")
     entries = {}
     has_errors = False
@@ -755,6 +829,21 @@ def render_daily_log(store):
             c6,c7 = st.columns(2)
             proj  = c6.text_input("Project", e.get("project",""), key=f"proj_{rid}")
             notes = c7.text_input("Notes",   e.get("notes",""),   key=f"notes_{rid}")
+
+            # Engineer handover fields per rig
+            st.markdown(
+                '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
+                '<span style="color:#388bfd;font-size:8pt;font-weight:700;letter-spacing:1px;">🌐 OFFSHORE / ONSITE ENGINEER ASSIGNMENT</span>'
+                '</div>', unsafe_allow_html=True)
+            ec1, ec2 = st.columns(2)
+            offshore = ec1.text_input(
+                "🌐 Offshore Engineer", e.get("offshore",""),
+                placeholder="Name of offshore engineer…",
+                key=f"off_{rid}")
+            onsite = ec2.text_input(
+                "🏢 Onsite Engineer", e.get("onsite",""),
+                placeholder="Name of onsite engineer…",
+                key=f"on_{rid}")
 
             # Reasons
             idle_reason = e.get("idleReason","")
@@ -808,10 +897,12 @@ def render_daily_log(store):
                 "idle":ih,"idleReason":idle_reason,
                 "down":dh,"downReason":down_reason,
                 "project":proj,"notes":notes,
+                "offshore":offshore,"onsite":onsite,
             }
 
     st.markdown("---")
     if st.button("💾 Save Log", type="primary", disabled=has_errors):
+        entries["_meta"] = {"handover": global_handover}
         store["logs"][date_str] = entries
         db_save_log(date_str, entries)
         st.success(f"✓ Log saved for {fmt_date(date_str)}")
@@ -1049,10 +1140,7 @@ def render_settings(store):
             db_save_rigs(store["rigs"])
             st.success(f"Added {nm} ✓"); st.rerun()
 
-        if st.button("Reset to 7 defaults"):
-            store["rigs"] = deepcopy(DEFAULT_RIGS)
-            db_save_rigs(store["rigs"])
-            st.success("Reset ✓"); st.rerun()
+
 
     with c2:
         st.markdown("#### Hour Rules — 24h Day")
