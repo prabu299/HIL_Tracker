@@ -682,21 +682,24 @@ def render_dashboard(store):
                 for cat in CATS:
                     v=float(e.get(cat["key"],0) or 0)
                     if v>0:
-                        hours_html+=f'<div style="color:{cat["hex"]};font-size:9pt;font-weight:700;">{cat["short"]} {v:.1f}h</div>'
+                        hours_html+=f'<div style="color:{cat["hex"]};font-size:9pt;font-weight:700;margin-top:4px;">{cat["short"]} {v:.1f}h</div>'
                 note_html = f'<span style="color:#8b949e;font-size:8pt;font-weight:600;">• {note}</span>' if note else ""
                 sw_version = e.get("swVersion", e.get("project", ""))
                 sw_html = f'<span style="color:#ffffff;font-size:9pt;font-weight:700;">SW: {sw_version}</span>' if sw_version else ""
                 st.markdown(f"""
                 <div style="background:#161b22;border:1px solid #30363d;
                     border-left:3px solid {s_col};border-radius:8px;
-                    padding:12px 14px;margin-bottom:8px;">
+                    padding:14px 16px;margin-bottom:16px;min-height:132px;
+                    display:flex;flex-direction:column;justify-content:space-between;">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
                     <span style="color:#e6edf3;font-size:13pt;font-weight:800;">{rig['name']}</span>
                     <span style="color:{s_col};background:rgba(0,0,0,0.3);border:1px solid {s_col}44;
-                          border-radius:4px;padding:1px 7px;font-size:8pt;font-weight:700;">{s_lbl}</span>
+                          border-radius:4px;padding:2px 8px;font-size:8pt;font-weight:700;letter-spacing:0.5px;">{s_lbl}</span>
                   </div>
-                  {hours_html if hours_html else '<div style="color:#484f58;font-size:9pt;margin-top:4px;">No entry today</div>'}
-                  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px;gap:12px;">
+                  <div style="margin-top:12px;">
+                    {hours_html if hours_html else '<div style="color:#484f58;font-size:9pt;margin-top:4px;">No entry today</div>'}
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;gap:12px;">
                     <div style="flex:1;">{note_html}</div>
                     <div style="flex:0 0 auto;">{sw_html}</div>
                   </div>
