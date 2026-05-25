@@ -769,13 +769,15 @@ def render_dashboard(store):
     # ── Engineer Handover Board ───────────────────────────────────────────────
     st.markdown("---")
     
+    # Initialize session state for handover date selection
+    if "handover_selected_date" not in st.session_state:
+        st.session_state.handover_selected_date = today_date()
+    
     # Date selector with return to today button
-    hov_header_col1, hov_header_col2 = st.columns([3, 1])
+    hov_header_col1, hov_header_col2, hov_header_col3 = st.columns([1.2, 0.4, 3])
     with hov_header_col1:
-        if "handover_selected_date" not in st.session_state:
-            st.session_state.handover_selected_date = today_date()
         selected_handover_date = st.date_input(
-            "Select Date",
+            "Date",
             value=st.session_state.handover_selected_date,
             max_value=today_date(),
             key="handover_date_picker"
@@ -783,19 +785,18 @@ def render_dashboard(store):
         st.session_state.handover_selected_date = selected_handover_date
     
     with hov_header_col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📅 Today", key="handover_today_btn"):
+        if st.button("Today", key="handover_today_btn", use_container_width=True):
             st.session_state.handover_selected_date = today_date()
             st.rerun()
     
-    selected_date_str = selected_handover_date.isoformat()
+    selected_date_str = st.session_state.handover_selected_date.isoformat()
     selected_log = logs.get(selected_date_str, {})
     
     # Update header based on date selection
     if selected_date_str == today:
         st.markdown("#### 🔄 Engineer Handover — Today")
     else:
-        date_display = selected_handover_date.strftime("%A, %B %d, %Y")
+        date_display = st.session_state.handover_selected_date.strftime("%A, %B %d, %Y")
         st.markdown(f"#### 🔄 Engineer Handover — {date_display}")
 
     # Collect per-rig engineer assignments for selected date
