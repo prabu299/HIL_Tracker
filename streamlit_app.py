@@ -794,19 +794,20 @@ def render_dashboard(store):
             '</div>', unsafe_allow_html=True)
 
         for rig, offshore, onsite in rig_engineers:
+            empty_tag = '<span style="color:#484f58">—</span>'
             off_html = (
                 f'<div style="background:rgba(56,139,253,0.10);border:1px solid rgba(56,139,253,0.3);'
                 f'border-radius:6px;padding:10px 14px;">'
                 f'<div style="color:#388bfd;font-size:7.5pt;font-weight:700;letter-spacing:1.5px;">🌐 OFFSHORE</div>'
                 f'<div style="color:#e6edf3;font-size:14pt;font-weight:800;">'
-                f'{offshore if offshore else "<span style='color:#484f58'>—</span>"}</div>'
+                f'{offshore if offshore else empty_tag}</div>'
                 f'</div>')
             on_html = (
                 f'<div style="background:rgba(63,185,80,0.10);border:1px solid rgba(63,185,80,0.3);'
                 f'border-radius:6px;padding:10px 14px;">'
                 f'<div style="color:#3fb950;font-size:7.5pt;font-weight:700;letter-spacing:1.5px;">🏢 ONSITE</div>'
                 f'<div style="color:#e6edf3;font-size:14pt;font-weight:800;">'
-                f'{onsite if onsite else "<span style='color:#484f58'>—</span>"}</div>'
+                f'{onsite if onsite else empty_tag}</div>'
                 f'</div>')
             st.markdown(
                 f'<div style="display:grid;grid-template-columns:120px 1fr 40px 1fr;'
@@ -858,25 +859,26 @@ def render_daily_log(store):
         "📋 Day Handover Note (optional)",
         existing_meta.get("handover",""),
         placeholder="Brief note about today's overall handover…",
-        key="global_handover")
+        key=f"global_handover_{date_str}")
     st.markdown("---")
     entries = {}
     has_errors = False
 
     for rig in store["rigs"]:
         rid = rig["id"]
+        key_prefix = f"{date_str}_{rid}"
         e   = existing.get(rid, blank_entry())
         with st.expander(f"**{rig['name']}**  {'✓' if rid in existing else '○'}", expanded=False):
             c1,c2,c3,c4,c5 = st.columns(5)
-            ae = c1.number_input("Auto Exec (h)", 0.0, float(DAY_HOURS), float(e.get("autoExec",0)), 0.5, key=f"ae_{rid}")
-            me = c2.number_input("Manual Exec (h)",0.0, float(HUMAN_POOL), float(e.get("manExec", 0)), 0.5, key=f"me_{rid}")
-            ad = c3.number_input("Auto Dev (h)",  0.0, float(AUTDEV_MAX),  float(e.get("autoDev", 0)), 0.5, key=f"ad_{rid}")
-            ih = c4.number_input("Idle (h)",      0.0, float(DAY_HOURS),   float(e.get("idle",    0)), 0.5, key=f"idle_{rid}")
-            dh = c5.number_input("Down (h)",      0.0, float(DAY_HOURS),   float(e.get("down",    0)), 0.5, key=f"down_{rid}")
+            ae = c1.number_input("Auto Exec (h)", 0.0, float(DAY_HOURS), float(e.get("autoExec",0)), 0.5, key=f"ae_{key_prefix}")
+            me = c2.number_input("Manual Exec (h)",0.0, float(HUMAN_POOL), float(e.get("manExec", 0)), 0.5, key=f"me_{key_prefix}")
+            ad = c3.number_input("Auto Dev (h)",  0.0, float(AUTDEV_MAX),  float(e.get("autoDev", 0)), 0.5, key=f"ad_{key_prefix}")
+            ih = c4.number_input("Idle (h)",      0.0, float(DAY_HOURS),   float(e.get("idle",    0)), 0.5, key=f"idle_{key_prefix}")
+            dh = c5.number_input("Down (h)",      0.0, float(DAY_HOURS),   float(e.get("down",    0)), 0.5, key=f"down_{key_prefix}")
 
             c6,c7 = st.columns(2)
-            sw_version = c6.text_input("SW Version", e.get("swVersion", e.get("project", "")), key=f"sw_{rid}")
-            notes = c7.text_input("Notes",   e.get("notes",""),   key=f"notes_{rid}")
+            sw_version = c6.text_input("SW Version", e.get("swVersion", e.get("project", "")), key=f"sw_{key_prefix}")
+            notes = c7.text_input("Notes",   e.get("notes",""),   key=f"notes_{key_prefix}")
 
             # Engineer handover fields per rig
             st.markdown(
@@ -887,11 +889,11 @@ def render_daily_log(store):
             offshore = ec1.text_input(
                 "🌐 Offshore Engineer", e.get("offshore",""),
                 placeholder="Name of offshore engineer…",
-                key=f"off_{rid}")
+                key=f"off_{key_prefix}")
             onsite = ec2.text_input(
                 "🏢 Onsite Engineer", e.get("onsite",""),
                 placeholder="Name of onsite engineer…",
-                key=f"on_{rid}")
+                key=f"on_{key_prefix}")
 
             # Reasons
             idle_reason = e.get("idleReason","")
@@ -900,12 +902,12 @@ def render_daily_log(store):
                 r1,r2 = st.columns(2)
                 with r1:
                     ir_choice = st.selectbox("Idle Reason ⚠ required",
-                        [""] + IDLE_PRESETS, key=f"ir_{rid}",
+                        [""] + IDLE_PRESETS, key=f"ir_{key_prefix}",
                         index=(IDLE_PRESETS.index(idle_reason)+1) if idle_reason in IDLE_PRESETS else 0)
                     if ir_choice == "Other" or (idle_reason and idle_reason not in IDLE_PRESETS):
                         ir_custom = st.text_input("Describe idle reason",
                             idle_reason if idle_reason not in IDLE_PRESETS else "",
-                            key=f"ir_custom_{rid}")
+                            key=f"ir_custom_{key_prefix}")
                         idle_reason = ir_custom
                     else:
                         idle_reason = ir_choice
@@ -916,12 +918,12 @@ def render_daily_log(store):
                 r1,r2 = st.columns(2)
                 with r1:
                     dr_choice = st.selectbox("Down Reason ⚠ required",
-                        [""] + DOWN_PRESETS, key=f"dr_{rid}",
+                        [""] + DOWN_PRESETS, key=f"dr_{key_prefix}",
                         index=(DOWN_PRESETS.index(down_reason)+1) if down_reason in DOWN_PRESETS else 0)
                     if dr_choice == "Other" or (down_reason and down_reason not in DOWN_PRESETS):
                         dr_custom = st.text_input("Describe down reason",
                             down_reason if down_reason not in DOWN_PRESETS else "",
-                            key=f"dr_custom_{rid}")
+                            key=f"dr_custom_{key_prefix}")
                         down_reason = dr_custom
                     else:
                         down_reason = dr_choice
@@ -957,7 +959,7 @@ def render_daily_log(store):
         st.success(f"✓ Log saved for {fmt_date(date_str)}")
         st.rerun()
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════
 # TAB 3 — REPORT
 # ══════════════════════════════════════════════════════════════════════════════
 def render_report(store):
