@@ -773,21 +773,16 @@ def render_dashboard(store):
     if "handover_selected_date" not in st.session_state:
         st.session_state.handover_selected_date = today_date()
     
-    # Date selector with return to today button
-    hov_header_col1, hov_header_col2, hov_header_col3 = st.columns([1.2, 0.4, 3])
+    # Date selector
+    hov_header_col1, hov_header_col2 = st.columns([1.2, 3])
     with hov_header_col1:
         selected_handover_date = st.date_input(
-            "Date",
+            "Select Date",
             value=st.session_state.handover_selected_date,
             max_value=today_date(),
             key="handover_date_picker"
         )
         st.session_state.handover_selected_date = selected_handover_date
-    
-    with hov_header_col2:
-        if st.button("Today", key="handover_today_btn", use_container_width=True):
-            st.session_state.handover_selected_date = today_date()
-            st.rerun()
     
     selected_date_str = st.session_state.handover_selected_date.isoformat()
     selected_log = logs.get(selected_date_str, {})
