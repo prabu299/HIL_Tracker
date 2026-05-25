@@ -863,7 +863,7 @@ def render_daily_log(store):
     st.markdown("### ✏ Daily Log Entry")
     col1, col2, col3 = st.columns([2,1,3])
     with col1:
-        sel_date = st.date_input("Log Date", value=today_date(),
+        sel_date = st.date_input("Select Date", value=today_date(),
                                  max_value=today_date(), key="log_date")
     date_str = sel_date.isoformat()
     existing = store["logs"].get(date_str,{})
